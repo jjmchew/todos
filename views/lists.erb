@@ -1,10 +1,10 @@
 <ul id="lists">
   <% sort_lists(@lists) do |list| %>
     <li class="<%= list_class(list) %>">
-      <a href="/lists/<%= list[:id] %>">
+      <a href="<%= BASE_URL %>/lists/<%= list[:id] %>">
         <h2><%= list[:name] %></h2>
         <p>
-          <%= todos_remaining_count(list) %> / <%= todos_count(list) %>
+          <%= list[:todos_remaining_count] %> / <%= list[:todos_count] %>
         </p>
       </a>
     </li>
@@ -12,5 +12,5 @@
 </ul>
 
 <% content_for :header_links do %>
-  <a class="add" href="/lists/new">New List</a>
+  <a class="add" href="<%= BASE_URL %>/lists/new">New List</a>
 <% end %>

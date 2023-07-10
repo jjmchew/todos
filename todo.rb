@@ -4,6 +4,9 @@ require "tilt/erubis"
 
 require_relative 'database_persistence'
 
+MODE = 'DEV'
+BASE_URL = MODE == 'DEV' ? '' : '/todos'
+
 configure do
   enable :sessions
   set :session_secret, 'secret'
@@ -17,20 +20,21 @@ end
 
 helpers do
   def list_complete?(list)
-    todos_count(list) > 0 && todos_remaining_count(list) == 0
+    # todos_count(list) > 0 && todos_remaining_count(list) == 0
+    list[:todos_count] > 0 && list[:todos_remaining_count] == 0
   end
 
   def list_class(list)
     "complete" if list_complete?(list)
   end
 
-  def todos_count(list)
-    list[:todos].size
-  end
+  #def todos_count(list)
+    #list[:todos].size
+  #end
 
-  def todos_remaining_count(list)
-    list[:todos].count { |todo| !todo[:completed] }
-  end
+  #def todos_remaining_count(list)
+    #list[:todos].count { |todo| !todo[:completed] }
+  #end
 
   def sort_lists(lists, &block)
     complete_lists, incomplete_lists = lists.partition { |list| list_complete?(list) }
@@ -52,7 +56,7 @@ def load_list(id)
   return list if list
 
   session[:error] = "The specified list was not found."
-  redirect "/lists"
+  redirect url('/lists')
 end
 
 # Return an error message if the name is invalid. Return nil if name is valid.
@@ -72,11 +76,11 @@ def error_for_todo(name)
 end
 
 before do
-  @storage = DatabasePersistence.new(logger)
+  @storage = DatabasePersistence.new(MODE, logger)
 end
 
 get "/" do
-  redirect "/lists"
+  redirect url("/lists")
 end
 
 # View list of lists
@@ -101,7 +105,7 @@ post "/lists" do
   else
     @storage.create_new_list(list_name)
     session[:success] = "The list has been created."
-    redirect "/lists"
+    redirect url("/lists")
   end
 end
 
@@ -109,6 +113,7 @@ end
 get "/lists/:id" do
   @list_id = params[:id].to_i
   @list = load_list(@list_id)
+  @todos = @storage.load_todos(@list_id)
   erb :list, layout: :layout
 end
 
@@ -132,7 +137,7 @@ post "/lists/:id" do
   else
     @storage.update_list_name(id, list_name)
     session[:success] = "The list has been updated."
-    redirect "/lists/#{id}"
+    redirect url("/lists/#{id}")
   end
 end
 
@@ -146,7 +151,7 @@ post "/lists/:id/destroy" do
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
     "/lists"
   else
-    redirect "/lists"
+    redirect url("/lists")
   end
 end
 
@@ -164,7 +169,7 @@ post "/lists/:list_id/todos" do
     @storage.create_new_todo(@list_id, text)
 
     session[:success] = "The todo was added."
-    redirect "/lists/#{@list_id}"
+    redirect url("/lists/#{@list_id}")
   end
 end
 
@@ -179,7 +184,7 @@ post "/lists/:list_id/todos/:id/destroy" do
     status 204
   else
     session[:success] = "The todo has been deleted."
-    redirect "/lists/#{@list_id}"
+    redirect url("/lists/#{@list_id}")
   end
 end
 
@@ -194,7 +199,7 @@ post "/lists/:list_id/todos/:id" do
   @storage.update_todo_status(@list_id, todo_id, is_completed)
 
   session[:success] = "The todo has been updated."
-  redirect "/lists/#{@list_id}"
+  redirect url("/lists/#{@list_id}")
 end
 
 # Mark all todos as complete for a list
@@ -205,5 +210,5 @@ post "/lists/:id/complete_all" do
   @storage.mark_all_todos_as_completed(@list_id)
 
   session[:success] = "All todos have been completed."
-  redirect "/lists/#{@list_id}"
+  redirect url("/lists/#{@list_id}")
 end
