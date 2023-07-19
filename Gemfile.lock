@@ -32,8 +32,8 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  erubis
-  pg
+  erubis (= 2.7.0)
+  pg (= 1.5.3)
   pry
   sinatra (~> 1.4.7)
   sinatra-contrib

@@ -2,10 +2,10 @@ require 'pg'
 
 class DatabasePersistence
   def initialize(mode, logger)
-    if mode == 'DEV'
-      @db = PG.connect(dbname: 'jjmchewa_todos')
+    if mode == 'development'
+      @db = PG.connect(dbname: CONFIG[:dbname])
     else
-      @db = PG.connect(dbname: 'jjmchewa_todos', user: 'jjmchewa_pg', password: 'db123')
+      @db = PG.connect(dbname: CONFIG[:dbname], user: CONFIG[:user], password: CONFIG[:password])
     end
     @logger = logger
   end

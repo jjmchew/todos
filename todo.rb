@@ -1,15 +1,17 @@
-require "sinatra"
-require "sinatra/content_for"
-require "tilt/erubis"
+require 'sinatra'
+require 'sinatra/content_for'
+require 'tilt/erubis'
+require 'yaml'
 
 require_relative 'database_persistence'
 
-MODE = 'DEV'
-BASE_URL = MODE == 'DEV' ? '' : '/todos'
+CONFIG = YAML.load(File.read('localonly.yml'))
+
+BASE_URL = ENV['RACK_ENV'] == 'development' ? '' : '/todos'
 
 configure do
   enable :sessions
-  set :session_secret, 'secret'
+  set :session_secret, CONFIG[:session_secret]
   set :erb, :escape_html => true
 end
 
@@ -76,7 +78,7 @@ def error_for_todo(name)
 end
 
 before do
-  @storage = DatabasePersistence.new(MODE, logger)
+  @storage = DatabasePersistence.new(ENV['RACK_ENV'], logger)
 end
 
 get "/" do
